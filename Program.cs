@@ -1,8 +1,10 @@
 ﻿using CG.Web.MegaApiClient;
 using GtaVersionSelector;
+using Microsoft.Win32;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 Dictionary<DeliveryPlatformEnum, string> _downloadLinks = new()
 {
@@ -46,9 +48,38 @@ Made with love by Arochka for https://gtrp.co";
 Console.Clear();
 
 Console.WriteLine(_logo);
-Console.WriteLine(@"Where's the GTA V folder ?(C:\Program Files\Rockstar Games\Grand Theft Auto V)");
 
+if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+{
+    Console.WriteLine("This tool only work on Windows");
+    Console.ReadKey();
+    return;
+}
+
+//Attempt to find install folder
+var installFolder = string.Empty;
+var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\WOW6432Node\Rockstar Games\Grand Theft Auto V");
+
+if (key == null)
+    key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\WOW6432Node\Rockstar Games\GTAV");
+
+if (key == null)
+    key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Rockstar Games\Grand Theft Auto V");
+
+if (key != null)
+{
+    var installFolderKey = key.GetValue("InstallFolder");
+
+    if (installFolderKey is string folder)
+        installFolder = folder;
+}
+
+//User input install folder
+Console.WriteLine(@$"Where's the GTA V folder ?(hit <Enter> for {installFolder})");
 var gameFolder = Console.ReadLine();
+
+if (string.IsNullOrWhiteSpace(gameFolder))
+    gameFolder = installFolder;
 
 if (!Directory.Exists(gameFolder))
 {
@@ -57,6 +88,7 @@ if (!Directory.Exists(gameFolder))
     return;
 }
 
+//Select Platform
 Console.WriteLine("What's your platform:");
 Console.WriteLine("0) Rockstar Launcher");
 Console.WriteLine("1) Steam");
@@ -72,6 +104,13 @@ if (!Enum.TryParse(typeof(DeliveryPlatformEnum), Console.ReadLine(), out var pla
     return;
 }
 
+//Warnings
+Console.WriteLine("Before continue:");
+Console.WriteLine("- You must have an up-to-date game");
+Console.WriteLine("- You should disable auto update");
+Console.ReadKey();
+
+//Select action
 Console.WriteLine("Downgrade / Restore:");
 Console.WriteLine("1) Downgrade");
 Console.WriteLine("2) Restore");
@@ -114,7 +153,7 @@ if (choice == "1")
         if (launcherIndexFile.Exists)
             launcherIndexFile.Delete();
 
-        Console.WriteLine("You must have Rockstar Launcher running and ready to play before continue !");
+        Console.WriteLine("You must have Rockstar Launcher running and ready to play before continue ! Press a key when you are ready...");
         Console.ReadKey();
     }
 
@@ -159,7 +198,7 @@ if (choice == "1")
         });
     }
 }
-else if(choice == "2")
+else if (choice == "2")
 {
     var backupDir = new DirectoryInfo(Path.Combine(gameFolder, "backup"));
 
