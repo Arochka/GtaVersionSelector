@@ -19,5 +19,15 @@ jobs:
           dotnet restore
       - name: Build
         run: dotnet build --configuration Release --no-restore
-      - name: Tree
-        run: tree . /F
+      - name: Generate Hashes
+        run: |
+          Get-FileHash ./bin/Release/net6.0/GtaVersionSelector.exe | Out-file ./GtaVersionSelector-checksum.txt
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{github.ref_name}}
+          tag_name: ${{github.ref_name}}
+          files: |
+            ./*-checksum.txt
+            ./bin/Release/net6.0/*.exe
+            
