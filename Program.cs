@@ -2,6 +2,7 @@
 using GtaVersionSelector;
 using SharpCompress.Archives;
 using SharpCompress.Common;
+using System.Diagnostics;
 
 Dictionary<DeliveryPlatformEnum, string> _downloadLinks = new()
 {
@@ -52,6 +53,7 @@ var gameFolder = Console.ReadLine();
 if (!Directory.Exists(gameFolder))
 {
     Console.Error.WriteLine("Invalid game folder");
+    Console.ReadKey();
     return;
 }
 
@@ -66,6 +68,7 @@ if (!Enum.TryParse(typeof(DeliveryPlatformEnum), Console.ReadLine(), out var pla
     || !Enum.IsDefined(typeof(DeliveryPlatformEnum), deliveryPlatform))
 {
     Console.Error.WriteLine("Unknown platform");
+    Console.ReadKey();
     return;
 }
 
@@ -100,6 +103,7 @@ if (choice == "1")
     if (!_downloadLinks.TryGetValue(deliveryPlatform, out var downloadLink))
     {
         Console.Error.WriteLine($"No download link for platform: {Enum.GetName(typeof(DeliveryPlatformEnum), deliveryPlatform)}");
+        Console.ReadKey();
         return;
     }
 
@@ -162,8 +166,12 @@ else if(choice == "2")
     if (!backupDir.Exists)
     {
         Console.WriteLine("Backup directory doesn't exist.");
+        Console.ReadKey();
         return;
     }
+
+    foreach (var process in Process.GetProcessesByName("Launcher"))
+        process.Kill();
 
     foreach (var fileToBackup in _filesToBackup)
     {
@@ -176,6 +184,11 @@ else if(choice == "2")
     }
 
     backupDir.Delete(true);
+
+    var launcherIndexFile = new FileInfo(Path.Combine(gameFolder, "index.bin"));
+
+    if (launcherIndexFile.Exists)
+        launcherIndexFile.Delete();
 }
 
 Console.WriteLine("Done. Press a key to exit...");
