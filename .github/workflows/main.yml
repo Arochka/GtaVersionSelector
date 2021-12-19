@@ -20,4 +20,4 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release --no-restore
       - name: Tree
-        run: tree .
+        run: tree . /F
