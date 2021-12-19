@@ -1,0 +1,33 @@
+name: dotnet package
+
+on:
+  push:
+    tags:        
+      - "*.*.*"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup .NET Core SDK ${{ matrix.dotnet-version }}
+        uses: actions/setup-dotnet@v1.7.2
+        with:
+          dotnet-version: "6.0"
+      - name: Install dependencies
+        run: |
+          dotnet restore
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+      - name: Generate Hashes
+        run: |
+          Get-FileHash ./bin/Release/net6.0/GtaVersionSelector.exe | Out-file ./GtaVersionSelector-checksum.txt
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{github.ref_name}}
+          tag_name: ${{github.ref_name}}
+          files: |
+            ./*-checksum.txt
+            ./bin/Release/net6.0/*.exe
+            
