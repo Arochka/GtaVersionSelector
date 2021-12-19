@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies
         run: |
           dotnet restore
-          apt-get install tree
+          sudo apt-get install -y tree
       - name: Build
         run: dotnet build --configuration Release --no-restore
       - name: Tree
